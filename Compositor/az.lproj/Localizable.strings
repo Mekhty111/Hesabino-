@@ -1,0 +1,72 @@
+"app_title" = "Domino üçün çot";
+"app_subtitle" = "Xalı telefonla çot kimi istifadə et və xalları say.";
+
+"points_title" = "Xal";
+"reset_player" = "Oyunçunu sıfırla";
+"reset_all" = "Hamısını sıfırla";
+
+"mode_phone365_title" = "Telefon (365)";
+"mode_101_title" = "101";
+"mode_phone365_subtitle" = "Sıralar: ×5, ×10, ×100";
+"mode_101_subtitle" = "Sıralar: ×1, ×10, ×100";
+
+"settings_title" = "Ayarlar";
+"language_title" = "Dil";
+"language_ru" = "Русский";
+"language_en" = "English";
+"language_az" = "Azərbaycan";
+"done" = "Hazır";
+
+"player_n_format" = "Oyunçu %d";
+"player_1" = "Oyunçu 1";
+"player_2" = "Oyunçu 2";
+"player_3" = "Oyunçu 3";
+"player_4" = "Oyunçu 4";
+
+"team_1" = "Komanda 1";
+"team_2" = "Komanda 2";
+
+"choose_mode_title" = "Oyun rejimini seçin";
+"choose_mode_subtitle" = "Xalı necə sayaq?";
+"mode_pairs_button" = "Cüt oynamaq (2 komanda)";
+"mode_freeforall_button" = "Hər kəs özü üçün (4 oyunçu)";
+
+"match_mode_title" = "Matç rejimi";
+"match_mode_pairs" = "Cütlər (2 komanda)";
+"match_mode_freeforall" = "Hər kəs özü üçün (4 oyunçu)";
+
+"score_display_mode_title" = "Xalın göstərilməsi";
+"score_display_per_team" = "Ayrı-ayrı";
+"score_display_shared" = "Orta çot";
+"row_label_win_team_1" = "Qələbə 1";
+"row_label_win_team_2" = "Qələbə 2";
+"winner_label" = "Qalib";
+
+"swipe_hint_to_101" = "101 rejiminə keçmək üçün sola sürüşdür";
+"swipe_hint_to_365" = "365 rejiminə keçmək üçün sağa sürüşdür";
+
+"history_title" = "Oyun tarixçəsi";
+"history_empty" = "Hələ tarixçə boşdur. Bitmiş oyunlar burada görünəcək.";
+"end_game_title" = "Oyunu bitirək?";
+"end_game_subtitle" = "Cari xal tarixçəyə yazılacaq və yeni oyun başlanacaq.";
+"end_game_cancel" = "Yox, səhv oldu";
+"end_game_confirm" = "Oyunu bitir";
+
+"history_delete" = "Sil";
+
+"rename_team" = "Komandanı adlandır";
+"rename_team_title" = "Komandanın adı";
+"rename_team_subtitle" = "Hər iki komanda üçün öz adlarını təyin et.";
+"rename_team_placeholder" = "Adı daxil et";
+"rename_team_cancel" = "Ləğv et";
+"rename_team_save" = "Yadda saxla";
+
+"onboarding_page1_title" = "Domino üçün rəqəmsal çot";
+"onboarding_page1_subtitle" = "Həqiqi çot kimi xal apar: rahat, hamıya görünən və səhvsiz.";
+"onboarding_page2_title" = "Hansı rejimlə sayaq?";
+"onboarding_page2_subtitle" = "Telefon (365) və ya 101, cütlər və ya hər kəs özü üçün, komandalar üçün ayrı və ya ümumi çot — hamısı bir ekranda.";
+"onboarding_page3_title" = "Sürüşdür və silkələ";
+"onboarding_page3_subtitle" = "Çotu sola/sağa sürüşdürərək rejimləri dəyiş (365 ↔ 101). Telefonu güclü silkələ ki, bütün xallar sıfırlansın.";
+"onboarding_button_next" = "Davam";
+"onboarding_button_start" = "Başla";
+"onboarding_button_skip" = "Keçmək";

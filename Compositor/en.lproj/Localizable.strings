@@ -1,0 +1,72 @@
+"app_title" = "Domino Abacus";
+"app_subtitle" = "Use your phone like real abacus beads to keep score.";
+
+"points_title" = "Score";
+"reset_player" = "Reset player";
+"reset_all" = "Reset all";
+
+"mode_phone365_title" = "Phone (365)";
+"mode_101_title" = "101";
+"mode_phone365_subtitle" = "Rows: ×5, ×10, ×100";
+"mode_101_subtitle" = "Rows: ×1, ×10, ×100";
+
+"settings_title" = "Settings";
+"language_title" = "Language";
+"language_ru" = "Russian";
+"language_en" = "English";
+"language_az" = "Azerbaijani";
+"done" = "Done";
+
+"player_n_format" = "Player %d";
+"player_1" = "Player 1";
+"player_2" = "Player 2";
+"player_3" = "Player 3";
+"player_4" = "Player 4";
+
+"team_1" = "Team 1";
+"team_2" = "Team 2";
+
+"choose_mode_title" = "Choose game mode";
+"choose_mode_subtitle" = "How do you want to keep score?";
+"mode_pairs_button" = "Play in pairs (2 teams)";
+"mode_freeforall_button" = "Everyone for themselves (4 players)";
+
+"match_mode_title" = "Match mode";
+"match_mode_pairs" = "Pairs (2 teams)";
+"match_mode_freeforall" = "Free-for-all (4 players)";
+
+"score_display_mode_title" = "Score display";
+"score_display_per_team" = "Separate";
+"score_display_shared" = "Shared board";
+"row_label_win_team_1" = "Wins 1";
+"row_label_win_team_2" = "Wins 2";
+"winner_label" = "Winner";
+
+"swipe_hint_to_101" = "Swipe left to switch to 101";
+"swipe_hint_to_365" = "Swipe right to switch to 365";
+
+"history_title" = "Game history";
+"history_empty" = "Your history is empty. Finished games will appear here.";
+"end_game_title" = "End the game?";
+"end_game_subtitle" = "Current score will be saved to history and a new round will start.";
+"end_game_cancel" = "No, by mistake";
+"end_game_confirm" = "End game";
+
+"history_delete" = "Delete";
+
+"rename_team" = "Rename team";
+"rename_team_title" = "Team name";
+"rename_team_subtitle" = "Set your own names for both teams.";
+"rename_team_placeholder" = "Enter name";
+"rename_team_cancel" = "Cancel";
+"rename_team_save" = "Save";
+
+"onboarding_page1_title" = "Digital abacus for domino";
+"onboarding_page1_subtitle" = "Keep score like on real abacus: clear, shared for everyone, and without mistakes.";
+"onboarding_page2_title" = "Choose how you count";
+"onboarding_page2_subtitle" = "Phone (365) or 101, pairs or free‑for‑all, separate or shared board for teams — all in one place.";
+"onboarding_page3_title" = "Swipe and shake";
+"onboarding_page3_subtitle" = "Swipe the abacus left/right to switch modes (365 ↔ 101). Give the phone a strong shake to reset all points.";
+"onboarding_button_next" = "Next";
+"onboarding_button_start" = "Start using";
+"onboarding_button_skip" = "Skip";

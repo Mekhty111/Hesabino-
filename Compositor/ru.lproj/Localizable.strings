@@ -1,0 +1,72 @@
+"app_title" = "Счёты для домино";
+"app_subtitle" = "Используй телефон как настоящие счёты для подсчёта очков.";
+
+"points_title" = "Очки";
+"reset_player" = "Сбросить игрока";
+"reset_all" = "Сбросить всё";
+
+"mode_phone365_title" = "Телефон (365)";
+"mode_101_title" = "101";
+"mode_phone365_subtitle" = "Ряды: ×5, ×10, ×100";
+"mode_101_subtitle" = "Ряды: ×1, ×10, ×100";
+
+"settings_title" = "Настройки";
+"language_title" = "Язык";
+"language_ru" = "Русский";
+"language_en" = "English";
+"language_az" = "Azərbaycan";
+"done" = "Готово";
+
+"player_n_format" = "Игрок %d";
+"player_1" = "Игрок 1";
+"player_2" = "Игрок 2";
+"player_3" = "Игрок 3";
+"player_4" = "Игрок 4";
+
+"team_1" = "Команда 1";
+"team_2" = "Команда 2";
+
+"choose_mode_title" = "Выберите режим игры";
+"choose_mode_subtitle" = "Как будем вести счёт?";
+"mode_pairs_button" = "Играть в паре (2 команды)";
+"mode_freeforall_button" = "Каждый сам за себя (4 игрока)";
+
+"match_mode_title" = "Режим матча";
+"match_mode_pairs" = "Пары (2 команды)";
+"match_mode_freeforall" = "Каждый сам за себя (4 игрока)";
+
+"score_display_mode_title" = "Отображение счёта";
+"score_display_per_team" = "Отдельно";
+"score_display_shared" = "Общие счёты";
+"row_label_win_team_1" = "Победы 1";
+"row_label_win_team_2" = "Победы 2";
+"winner_label" = "Победитель";
+
+"swipe_hint_to_101" = "Свайпни влево, чтобы перейти к 101";
+"swipe_hint_to_365" = "Свайпни вправо, чтобы перейти к 365";
+
+"history_title" = "История игр";
+"history_empty" = "История пока пуста. Завершённые игры будут появляться здесь.";
+"end_game_title" = "Завершить игру?";
+"end_game_subtitle" = "Текущий счёт будет сохранён в историю и начнётся новая партия.";
+"end_game_cancel" = "Нет, случайно";
+"end_game_confirm" = "Завершить игру";
+
+"history_delete" = "Удалить";
+
+"rename_team" = "Переименовать команду";
+"rename_team_title" = "Название команды";
+"rename_team_subtitle" = "Задайте свои названия для обеих команд.";
+"rename_team_placeholder" = "Введите название";
+"rename_team_cancel" = "Отмена";
+"rename_team_save" = "Сохранить";
+
+"onboarding_page1_title" = "Цифровые счёты для домино";
+"onboarding_page1_subtitle" = "Веди счёт партии как на настоящих счётах: удобно, видно всем и без ошибок.";
+"onboarding_page2_title" = "Выбери режим подсчёта";
+"onboarding_page2_subtitle" = "Телефон (365) или 101, пары или каждый сам за себя, отдельные или общие счёты для команд — всё на одном экране.";
+"onboarding_page3_title" = "Свайп и встряхивание";
+"onboarding_page3_subtitle" = "Свайпай счёты влево/вправо, чтобы переключать режим (365 ↔ 101). Сильно встряхни телефон, чтобы обнулить все очки.";
+"onboarding_button_next" = "Далее";
+"onboarding_button_start" = "Начать пользоваться";
+"onboarding_button_skip" = "Пропустить";
