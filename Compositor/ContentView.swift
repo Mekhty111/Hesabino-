@@ -186,14 +186,15 @@ struct ContentView: View {
                 playerSelector
 
                 swipableAbacus
+                
+                Spacer()
 
                 swipeHint
-                    .padding(.top, 12)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 16)
             .frame(maxWidth: 520)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         // Сильное встряхивание телефона → сбросить счёт
         .background(
@@ -504,12 +505,19 @@ struct ContentView: View {
                 Button {
                     // Определяем победителя перед сохранением в историю
                     let winnerIndex = determineWinner()
+                    
+                    // Обновляем счетчик побед для победителя
+                    if let winner = winnerIndex, 
+                       matchMode == .pairs2,
+                       teamWins.indices.contains(winner) {
+                        teamWins[winner] += 1
+                    }
+                    
                     saveCurrentGameToHistory(winner: winnerIndex)
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
                         showEndGameConfirm = false
                         resetAllPlayers()
-                        // Сбрасываем счетчики побед при завершении игры
-                        resetTeamWins()
+                        // НЕ сбрасываем счетчики побед - они должны накапливаться
                     }
                 } label: {
                     Text("end_game_confirm")
@@ -1038,7 +1046,6 @@ struct ContentView: View {
         // Если есть победитель, обновляем счетчик побед
         if let winner = winnerIndex, 
            matchMode == .pairs2,
-           scoreDisplayMode == .sharedBoard,
            teamWins.indices.contains(winner) {
             teamWins[winner] += 1
         }
@@ -1674,7 +1681,7 @@ struct SettingsView: View {
                         // Режим матча
                         VStack(spacing: 16) {
                             HStack {
-                                Image(systemName: "person.2.fill")
+                                Image(systemName: "square.stack.3d.down.right")
                                     .font(.system(.subheadline, design: .rounded, weight: .medium))
                                     .foregroundStyle(Color(red: 0.28, green: 0.85, blue: 0.48))
                                 Text("match_mode_title")
@@ -1778,7 +1785,7 @@ struct SettingsView: View {
                         // Стиль счетов
                         VStack(spacing: 16) {
                             HStack {
-                                Image(systemName: "paintbrush.fill")
+                                Image(systemName: "paintpalette")
                                     .font(.system(.subheadline, design: .rounded, weight: .medium))
                                     .foregroundStyle(Color(red: 0.28, green: 0.85, blue: 0.48))
                                 Text("abacus_style_title")
@@ -1800,20 +1807,20 @@ struct SettingsView: View {
                                                 Group {
                                                     switch style {
                                                     case .classic:
-                                                        Image(systemName: "circle.grid.3x3")
-                                                            .font(.system(size: 20, weight: .medium))
+                                                        Image(systemName: "dial.min")
+                                                            .font(.system(size: 18, weight: .medium))
                                                             .foregroundStyle(.white)
                                                     case .stone:
-                                                        Image(systemName: "mount.2.fill")
-                                                            .font(.system(size: 20, weight: .medium))
+                                                        Image(systemName: "diamond.fill")
+                                                            .font(.system(size: 18, weight: .medium))
                                                             .foregroundStyle(.white)
                                                     case .neon:
-                                                        Image(systemName: "lightbulb.fill")
-                                                            .font(.system(size: 20, weight: .medium))
+                                                        Image(systemName: "sparkles")
+                                                            .font(.system(size: 18, weight: .medium))
                                                             .foregroundStyle(.white)
                                                     case .wooden:
-                                                        Image(systemName: "tree.fill")
-                                                            .font(.system(size: 20, weight: .medium))
+                                                        Image(systemName: "leaf.fill")
+                                                            .font(.system(size: 18, weight: .medium))
                                                             .foregroundStyle(.white)
                                                     }
                                                 }
@@ -1848,7 +1855,7 @@ struct SettingsView: View {
                         // Язык
                         VStack(spacing: 16) {
                             HStack {
-                                Image(systemName: "globe")
+                                Image(systemName: "globe.americas.fill")
                                     .font(.system(.subheadline, design: .rounded, weight: .medium))
                                     .foregroundStyle(Color(red: 0.28, green: 0.85, blue: 0.48))
                                 Text("language_title")

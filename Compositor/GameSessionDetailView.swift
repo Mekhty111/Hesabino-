@@ -38,7 +38,11 @@ struct GameSessionDetailView: View {
                             if let totalWins = entry.totalWins {
                                 HStack(spacing: 24) {
                                     ForEach(totalWins.indices, id: \.self) { index in
-                                        let isWinner = entry.winner == index
+                                        let isCurrentGameWinner = entry.winner == index
+                                        let hasMostWins = totalWins.indices.contains(index) && 
+                                                         totalWins[index] == totalWins.max() && 
+                                                         totalWins[index] > 0
+                                        let isWinner = isCurrentGameWinner || hasMostWins
                                         VStack(spacing: 8) {
                                             // Аватар команды
                                             ZStack {

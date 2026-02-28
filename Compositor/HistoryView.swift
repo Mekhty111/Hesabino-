@@ -126,7 +126,12 @@ private struct HistoryEntryCard: View {
     }
     
     private func playerScoreRow(for index: Int) -> some View {
-        let isWinner = entry.winner == index
+        let isCurrentGameWinner = entry.winner == index
+        let hasMostWins = entry.totalWins != nil && 
+                         entry.totalWins!.indices.contains(index) && 
+                         entry.totalWins![index] == entry.totalWins!.max() && 
+                         entry.totalWins![index] > 0
+        let isWinner = isCurrentGameWinner || hasMostWins
         
         return HStack {
             playerNameView(for: index, isWinner: isWinner)
