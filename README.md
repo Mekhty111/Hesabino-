@@ -1,113 +1,113 @@
 # 🎯 Compositor
 
-**Современное приложение для счета очков в настольных играх с красивым интерфейсом и множеством настроек**
+**Modern scorekeeping app for board games with beautiful interface and extensive customization**
 
 ![iOS](https://img.shields.io/badge/iOS-15.0+-blue.svg)
 ![Swift](https://img.shields.io/badge/Swift-5.8+-orange.svg)
 ![SwiftUI](https://img.shields.io/badge/SwiftUI-UI%20Framework-purple.svg)
 
-## ✨ Возможности
+## ✨ Features
 
-### 🎮 Игровые режимы
-- **Пары (2 команды)** - идеально для командных игр
-- **Свободная игра (4 игрока)** - для соревнований между несколькими участниками
-- **Режимы счета 365 и 101** - классические настольные игры
+### 🎮 Game Modes
+- **Pairs (2 teams)** - perfect for team games
+- **Free for All (4 players)** - for competitions between multiple participants
+- **Score modes 365 and 101** - classic board games
 
-### 🎨 Кастомизация счетов
-Выберите один из 4 уникальных стилей:
-- **📍 Классический** - традиционный деревянный дизайн
-- **🪨 Каменный** - прочная каменная текстура
-- **💡 Неоновый** - яркий неоновый стиль с зеленым свечением
-- **🌳 Деревянный** - натуральное дерево с теплыми оттенками
+### 🎨 Scoreboard Customization
+Choose from 4 unique styles:
+- **📍 Classic** - traditional wooden design
+- **🪨 Stone** - durable stone texture
+- **💡 Neon** - bright neon style with green glow
+- **🌳 Wooden** - natural wood with warm tones
 
-### 🌍 Многоязычность
-- 🇷🇺 Русский
-- 🇬🇧 Английский  
-- 🇦🇿 Азербайджанский
+### 🌍 Multilingual Support
+- 🇷🇺 Russian
+- 🇬🇧 English  
+- 🇦🇿 Azerbaijani
 
-### 📊 История игр
-- Сохранение результатов всех игр
-- Детальная статистика по каждой сессии
-- Подсчет победителей сессии
-- Удаление ненужных записей
+### 📊 Game History
+- Save results of all games
+- Detailed statistics for each session
+- Session winner tracking
+- Delete unwanted entries
 
-### 🎯 Умные функции
-- **Сброс встряхиванием** - просто встряхните телефон для сброса счета
-- **Перенос десятков** - автоматический перенос при заполнении ряда
-- **Адаптивный интерфейс** - поддержка разных размеров экранов
-- **Сохранение настроек** - ваши предпочтения запоминаются
+### 🎯 Smart Features
+- **Shake to reset** - just shake your phone to reset scores
+- **Carry over tens** - automatic carry when row is filled
+- **Adaptive interface** - support for different screen sizes
+- **Settings persistence** - your preferences are remembered
 
-## 🚀 Быстрый старт
+## 🚀 Quick Start
 
-### Требования
+### Requirements
 - iOS 15.0+
 - Xcode 14.0+
 - Swift 5.8+
 
-### Установка
-1. Клонируйте репозиторий:
+### Installation
+1. Clone the repository:
 ```bash
 git clone https://github.com/yourusername/Compositor.git
 cd Compositor
 ```
 
-2. Откройте проект в Xcode:
+2. Open the project in Xcode:
 ```bash
 open Compositor.xcodeproj
 ```
 
-3. Выберите устройство или симулятор и запустите проект
+3. Select device or simulator and run the project
 
-## 📱 Использование
+## 📱 Usage
 
-### Основные функции
-1. **Выберите режим игры** - Пары или Свободная игра
-2. **Настройте стиль счетов** в настройках
-3. **Считайте очки** свайпом бусинок
-4. **Завершайте игры** и отслеживайте историю
+### Basic Functions
+1. **Select game mode** - Pairs or Free for All
+2. **Customize scoreboard style** in settings
+3. **Count scores** by swiping beads
+4. **Complete games** and track history
 
-### Управление счетами
-- **Свайп влево** - переместить бусинку в активную зону
-- **Свайп вправо** - вернуть бусинку в неактивную зону
-- **Встряхивание телефона** - сбросить все счеты
-- **Кнопка "Закончить игру"** - завершить текущую игру
+### Score Management
+- **Swipe left** - move bead to active zone
+- **Swipe right** - return bead to inactive zone
+- **Shake phone** - reset all scores
+- **"End Game" button** - finish current game
 
-### История игр
-- Просмотр всех сыгранных игр
-- Детальная информация о каждой сессии
-- Определение победителя по общему количеству побед
+### Game History
+- View all played games
+- Detailed session information
+- Winner determination by total wins
 
-## 🏗️ Архитектура проекта
+## 🏗️ Project Architecture
 
-### Основные компоненты
-- **ContentView.swift** - главный экран с игровой логикой
-- **GameSessionDetailView.swift** - детальная информация о сессии
-- **HistoryView.swift** - история игр
-- **SettingsView.swift** - настройки приложения
+### Core Components
+- **ContentView.swift** - main screen with game logic
+- **GameSessionDetailView.swift** - detailed session information
+- **HistoryView.swift** - game history
+- **SettingsView.swift** - app settings
 
-### Ключевые особенности
-- **MVVM архитектура** с SwiftUI
-- **@AppStorage** для сохранения настроек
-- **Localized strings** для многоязычности
-- **Custom components** для переиспользуемых элементов
+### Key Features
+- **MVVM architecture** with SwiftUI
+- **@AppStorage** for settings persistence
+- **Localized strings** for multilingual support
+- **Custom components** for reusable elements
 
-## 🎨 Дизайн и интерфейс
+## 🎨 Design & Interface
 
-### Стили счетов
-Каждый стиль имеет уникальные визуальные характеристики:
-- Градиенты и текстуры рамки
-- Цвета бусинок (активные/неактивные)
-- Тени и свечения
-- Специальные эффекты для неонового стиля
+### Scoreboard Styles
+Each style has unique visual characteristics:
+- Frame gradients and textures
+- Bead colors (active/inactive)
+- Shadows and glows
+- Special effects for neon style
 
-### Анимации
-- Плавные переходы между состояниями
-- Spring анимации для перемещения бусинок
-- Визуальная обратная связь при взаимодействии
+### Animations
+- Smooth transitions between states
+- Spring animations for bead movement
+- Visual feedback on interaction
 
-## 🔧 Технические детали
+## 🔧 Technical Details
 
-### Структура данных
+### Data Structure
 ```swift
 struct GameHistoryEntry {
     let date: Date
@@ -121,35 +121,35 @@ struct GameHistoryEntry {
 }
 ```
 
-### Настройки
-- Режим матча (пары/свободная игра)
-- Режим отображения счета (для команд/общая доска)
-- Стиль счетов (классический/каменный/неоновый/деревянный)
-- Язык интерфейса
+### Settings
+- Match mode (pairs/free for all)
+- Score display mode (per team/shared board)
+- Scoreboard style (classic/stone/neon/wooden)
+- Interface language
 
-## 🤝 Вклад
+## 🤝 Contributing
 
-Мы приветствуем вклад в развитие проекта! Чтобы внести изменения:
+We welcome contributions to the project! To make changes:
 
-1. Fork проекта
-2. Создайте ветку для вашей функции (`git checkout -b feature/AmazingFeature`)
-3. Commit ваши изменения (`git commit -m 'Add some AmazingFeature'`)
-4. Push в ветку (`git push origin feature/AmazingFeature`)
-5. Откройте Pull Request
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## 📄 Лицензия
+## 📄 License
 
-Этот проект распространяется под лицензией MIT. Подробности в файле [LICENSE](LICENSE).
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-## 📞 Контакты
+## 📞 Contact
 
-Если у вас есть вопросы или предложения, свяжитесь с нами:
+If you have questions or suggestions, contact us:
 
 - Email: your.email@example.com
 - GitHub: [@yourusername](https://github.com/yourusername)
 
 ---
 
-**Сделано с ❤️ для любителей настольных игр**
+**Made with ❤️ for board game enthusiasts**
 
 ![App Icon](https://via.placeholder.com/100x100/28D554/FFFFFF?text=🎯)
