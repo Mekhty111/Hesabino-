@@ -41,6 +41,25 @@
 "row_label_win_team_1" = "Победы 1";
 "row_label_win_team_2" = "Победы 2";
 "winner_label" = "Победитель";
+"total_wins_label" = "победа";
+"session_detail_title" = "Детализация сессии";
+"session_winner" = "Победитель сессии";
+"game_sessions_title" = "Игры в сессии";
+"game_label" = "Игра";
+"settings_subtitle" = "Настройте игру под себя";
+"abacus_style_title" = "Стиль счетов";
+"abacus_style_classic" = "Классический";
+"abacus_style_classic_subtitle" = "Традиционный деревянный дизайн";
+"abacus_style_stone" = "Каменный";
+"abacus_style_stone_subtitle" = "Прочная каменная текстура";
+"abacus_style_neon" = "Неоновый";
+"abacus_style_neon_subtitle" = "Яркий неоновый стиль";
+"abacus_style_wooden" = "Деревянный";
+"abacus_style_wooden_subtitle" = "Натуральное дерево";
+"match_mode_pairs_subtitle" = "2 команды соревнуются";
+"match_mode_freeforall_subtitle" = "4 игрока играют каждый за себя";
+"score_display_per_team_subtitle" = "Отдельные счеты для каждой команды";
+"score_display_shared_subtitle" = "Общие счеты для команд";
 
 "swipe_hint_to_101" = "Свайпни влево, чтобы перейти к 101";
 "swipe_hint_to_365" = "Свайпни вправо, чтобы перейти к 365";

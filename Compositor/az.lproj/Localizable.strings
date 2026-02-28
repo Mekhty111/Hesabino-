@@ -41,6 +41,25 @@
 "row_label_win_team_1" = "Qələbə 1";
 "row_label_win_team_2" = "Qələbə 2";
 "winner_label" = "Qalib";
+"total_wins_label" = "qələbə";
+"session_detail_title" = "Sessiyanın təfrrüdatı";
+"session_winner" = "Sessiyanın qalibi";
+"game_sessions_title" = "Sessiyadakı oyunlar";
+"game_label" = "Oyun";
+"settings_subtitle" = "Oyun təcrübənizi fərdiləşdirin";
+"abacus_style_title" = "Sayğac Üslubu";
+"abacus_style_classic" = "Klassik";
+"abacus_style_classic_subtitle" = "Ənənəvi taxta dizayn";
+"abacus_style_stone" = "Daş";
+"abacus_style_stone_subtitle" = "Davamlı daş teksturası";
+"abacus_style_neon" = "Neon";
+"abacus_style_neon_subtitle" = "Parlaq neon üslubu";
+"abacus_style_wooden" = "Taxta";
+"abacus_style_wooden_subtitle" = "Təbii ağac";
+"match_mode_pairs_subtitle" = "2 komanda mübarizə aparır";
+"match_mode_freeforall_subtitle" = "4 oyunçu özləri üçün oynayır";
+"score_display_per_team_subtitle" = "Hər komanda üçün ayrı xallar";
+"score_display_shared_subtitle" = "Komandalar üçün ortaq xallar";
 
 "swipe_hint_to_101" = "101 rejiminə keçmək üçün sola sürüşdür";
 "swipe_hint_to_365" = "365 rejiminə keçmək üçün sağa sürüşdür";

@@ -5,6 +5,7 @@ struct HistoryView: View {
     let onDelete: (GameHistoryEntry) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @State private var selectedEntry: GameHistoryEntry?
 
     var body: some View {
         NavigationStack {
@@ -29,15 +30,20 @@ struct HistoryView: View {
                 } else {
                     List {
                         ForEach(entries) { entry in
-                            HistoryEntryCard(entry: entry)
-                                .listRowBackground(Color.clear)
-                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                    Button(role: .destructive) {
-                                        onDelete(entry)
-                                    } label: {
-                                        Label("history_delete", systemImage: "trash")
-                                    }
+                            Button {
+                                selectedEntry = entry
+                            } label: {
+                                HistoryEntryCard(entry: entry)
+                            }
+                            .buttonStyle(.plain)
+                            .listRowBackground(Color.clear)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button(role: .destructive) {
+                                    onDelete(entry)
+                                } label: {
+                                    Label("history_delete", systemImage: "trash")
                                 }
+                            }
                         }
                     }
                     .scrollContentBackground(.hidden)
@@ -55,6 +61,9 @@ struct HistoryView: View {
                     }
                 }
             }
+        }
+        .sheet(item: $selectedEntry) { entry in
+            GameSessionDetailView(entry: entry)
         }
     }
 }
@@ -122,9 +131,16 @@ private struct HistoryEntryCard: View {
         return HStack {
             playerNameView(for: index, isWinner: isWinner)
             Spacer()
-            Text("\(entry.scores[index])")
-                .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                .foregroundStyle(isWinner ? winnerTextColor : .white)
+            // Показываем количество побед вместо очков
+            if let totalWins = entry.totalWins, index < totalWins.count {
+                Text("\(totalWins[index])")
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(isWinner ? winnerTextColor : .white)
+            } else {
+                Text("0")
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(isWinner ? winnerTextColor : .white)
+            }
         }
     }
     

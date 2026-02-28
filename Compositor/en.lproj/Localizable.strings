@@ -41,6 +41,25 @@
 "row_label_win_team_1" = "Wins 1";
 "row_label_win_team_2" = "Wins 2";
 "winner_label" = "Winner";
+"total_wins_label" = "wins";
+"session_detail_title" = "Session Details";
+"session_winner" = "Session Winner";
+"game_sessions_title" = "Games in Session";
+"game_label" = "Game";
+"settings_subtitle" = "Customize your game experience";
+"abacus_style_title" = "Abacus Style";
+"abacus_style_classic" = "Classic";
+"abacus_style_classic_subtitle" = "Traditional wooden design";
+"abacus_style_stone" = "Stone";
+"abacus_style_stone_subtitle" = "Durable stone texture";
+"abacus_style_neon" = "Neon";
+"abacus_style_neon_subtitle" = "Bright neon style";
+"abacus_style_wooden" = "Wooden";
+"abacus_style_wooden_subtitle" = "Natural wood";
+"match_mode_pairs_subtitle" = "2 teams compete";
+"match_mode_freeforall_subtitle" = "4 players play for themselves";
+"score_display_per_team_subtitle" = "Separate scores for each team";
+"score_display_shared_subtitle" = "Shared scores for teams";
 
 "swipe_hint_to_101" = "Swipe left to switch to 101";
 "swipe_hint_to_365" = "Swipe right to switch to 365";

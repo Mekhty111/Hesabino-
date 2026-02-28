@@ -78,6 +78,33 @@ enum ScoreDisplayMode: String, CaseIterable, Identifiable, Codable {
     }
 }
 
+enum AbacusStyle: String, CaseIterable, Identifiable, Codable {
+    case classic
+    case stone
+    case neon
+    case wooden
+    
+    var id: String { rawValue }
+    
+    var titleKey: LocalizedStringKey {
+        switch self {
+        case .classic: return LocalizedStringKey("abacus_style_classic")
+        case .stone: return LocalizedStringKey("abacus_style_stone")
+        case .neon: return LocalizedStringKey("abacus_style_neon")
+        case .wooden: return LocalizedStringKey("abacus_style_wooden")
+        }
+    }
+    
+    var subtitleKey: LocalizedStringKey {
+        switch self {
+        case .classic: return LocalizedStringKey("abacus_style_classic_subtitle")
+        case .stone: return LocalizedStringKey("abacus_style_stone_subtitle")
+        case .neon: return LocalizedStringKey("abacus_style_neon_subtitle")
+        case .wooden: return LocalizedStringKey("abacus_style_wooden_subtitle")
+        }
+    }
+}
+
 struct GameHistoryEntry: Identifiable, Codable {
     let id: UUID
     let date: Date
@@ -87,6 +114,15 @@ struct GameHistoryEntry: Identifiable, Codable {
     let scores: [Int]
     let names: [String]?
     let winner: Int?  // индекс победителя (nil если нет победителя)
+    let totalWins: [Int]?  // общее количество побед команд на момент завершения игры
+    let gameSessions: [GameSession]?  // детализация по каждой игре в сессии
+}
+
+struct GameSession: Identifiable, Codable {
+    let id: UUID
+    let date: Date
+    let scores: [Int]
+    let winner: Int?  // индекс победителя этой конкретной игры
 }
 
 struct ContentView: View {
@@ -95,10 +131,12 @@ struct ContentView: View {
 
     @AppStorage("matchMode") private var matchModeRaw: String = ""
     @AppStorage("scoreDisplayMode") private var scoreDisplayModeRaw: String = ScoreDisplayMode.perTeam.rawValue
+    @AppStorage("abacusStyle") private var abacusStyleRaw: String = AbacusStyle.classic.rawValue
     @AppStorage("gameHistory") private var gameHistoryData: Data = Data()
     @State private var players: [AbacusPlayer] = []
     @State private var teamWins: [Int] = []
     @State private var customNames: [String] = []
+    @State private var currentGameSessions: [GameSession] = []  // текущая сессия игр
 
     @State private var selectedPlayerIndex: Int = 0
     @State private var gameMode: GameMode = .phone365
@@ -117,6 +155,10 @@ struct ContentView: View {
 
     private var scoreDisplayMode: ScoreDisplayMode {
         ScoreDisplayMode(rawValue: scoreDisplayModeRaw) ?? .perTeam
+    }
+    
+    private var abacusStyle: AbacusStyle {
+        AbacusStyle(rawValue: abacusStyleRaw) ?? .classic
     }
 
     private var historyEntries: [GameHistoryEntry] {
@@ -161,7 +203,7 @@ struct ContentView: View {
             .frame(width: 0, height: 0)
         )
         .sheet(isPresented: $isSettingsPresented) {
-            SettingsView(matchModeRaw: $matchModeRaw, scoreDisplayModeRaw: $scoreDisplayModeRaw)
+            SettingsView(matchModeRaw: $matchModeRaw, scoreDisplayModeRaw: $scoreDisplayModeRaw, abacusStyleRaw: $abacusStyleRaw)
         }
         .sheet(isPresented: $isHistoryPresented) {
             HistoryView(entries: historyEntries, onDelete: deleteHistoryEntry)
@@ -460,10 +502,14 @@ struct ContentView: View {
                 .buttonStyle(.plain)
 
                 Button {
-                    saveCurrentGameToHistory()
+                    // Определяем победителя перед сохранением в историю
+                    let winnerIndex = determineWinner()
+                    saveCurrentGameToHistory(winner: winnerIndex)
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
                         showEndGameConfirm = false
                         resetAllPlayers()
+                        // Сбрасываем счетчики побед при завершении игры
+                        resetTeamWins()
                     }
                 } label: {
                     Text("end_game_confirm")
@@ -528,7 +574,13 @@ struct ContentView: View {
     private func playerChip(for index: Int) -> some View {
         let isSelected = index == selectedPlayerIndex
         let playerScore = score(for: players[index])
-        let isWinner = isWinningScore(playerScore)
+        
+        // Новая логика: зеленой только игрок с максимальным счетом среди прошедших порог
+        let allScores = players.map { score(for: $0) }
+        let winningScores = allScores.enumerated().filter { isWinningScore($0.element) }
+        let maxWinningScore = winningScores.map { $0.element }.max()
+        let isWinner = isWinningScore(playerScore) && playerScore == maxWinningScore
+        
         let winnerTextColor = Color(red: 0.28, green: 0.85, blue: 0.48)
         let selectedColors: [Color] = isWinner
         ? [Color(red: 0.28, green: 0.85, blue: 0.48), Color(red: 0.10, green: 0.55, blue: 0.30)]
@@ -657,7 +709,8 @@ struct ContentView: View {
                     rowHeight: rowHeight,
                     rowSpacing: rowSpacing,
                     innerPaddingV: innerPaddingV,
-                    innerPaddingH: innerPaddingH
+                    innerPaddingH: innerPaddingH,
+                    style: abacusStyle
                 )
 
                 VStack(spacing: rowSpacing) {
@@ -668,7 +721,8 @@ struct ContentView: View {
                             label: "×\(multiplier)",
                             onFull: {
                                 performCarry(playerIndex: playerIndex, fromRod: rodIndex)
-                            }
+                            },
+                            style: abacusStyle
                         )
                         .frame(height: rowHeight)
                     }
@@ -696,8 +750,10 @@ struct ContentView: View {
 
         let team1Score = players.indices.contains(0) ? score(for: players[0]) : 0
         let team2Score = players.indices.contains(1) ? score(for: players[1]) : 0
-        let team1IsWinner = isWinningScore(team1Score)
-        let team2IsWinner = isWinningScore(team2Score)
+        
+        // Новая логика: зеленой только команда с наибольшим счетом когда обе прошли порог
+        let team1IsWinner = isWinningScore(team1Score) && team1Score > team2Score
+        let team2IsWinner = isWinningScore(team2Score) && team2Score > team1Score
         let winnerTextColor = Color(red: 0.28, green: 0.85, blue: 0.48)
         let multipliers = gameMode.rowMultipliers
 
@@ -719,6 +775,18 @@ struct ContentView: View {
                         .foregroundStyle(team1IsWinner ? winnerTextColor : .white)
                         .contentTransition(.numericText())
                         .animation(.spring(response: 0.25, dampingFraction: 0.82), value: team1Score)
+                    
+                    // Показываем количество побед если доступно
+                    if teamWins.indices.contains(0) && teamWins[0] > 0 {
+                        HStack(spacing: 2) {
+                            Text("\(teamWins[0])")
+                                .font(.system(.caption, design: .rounded, weight: .medium))
+                                .foregroundStyle(team1IsWinner ? winnerTextColor : .white.opacity(0.7))
+                            Text(LocalizedStringKey("total_wins_label"))
+                                .font(.system(.caption, design: .rounded, weight: .medium))
+                                .foregroundStyle(team1IsWinner ? winnerTextColor : .white.opacity(0.7))
+                        }
+                    }
                 }
                 .highPriorityGesture(
                     TapGesture(count: 2)
@@ -745,6 +813,18 @@ struct ContentView: View {
                         .foregroundStyle(team2IsWinner ? winnerTextColor : .white)
                         .contentTransition(.numericText())
                         .animation(.spring(response: 0.25, dampingFraction: 0.82), value: team2Score)
+                    
+                    // Показываем количество побед если доступно
+                    if teamWins.indices.contains(1) && teamWins[1] > 0 {
+                        HStack(spacing: 2) {
+                            Text("\(teamWins[1])")
+                                .font(.system(.caption, design: .rounded, weight: .medium))
+                                .foregroundStyle(team2IsWinner ? winnerTextColor : .white.opacity(0.7))
+                            Text(LocalizedStringKey("total_wins_label"))
+                                .font(.system(.caption, design: .rounded, weight: .medium))
+                                .foregroundStyle(team2IsWinner ? winnerTextColor : .white.opacity(0.7))
+                        }
+                    }
                 }
                 .highPriorityGesture(
                     TapGesture(count: 2)
@@ -760,7 +840,8 @@ struct ContentView: View {
                     rowHeight: rowHeight,
                     rowSpacing: rowSpacing,
                     innerPaddingV: innerPaddingV,
-                    innerPaddingH: innerPaddingH
+                    innerPaddingH: innerPaddingH,
+                    style: abacusStyle
                 )
 
                 VStack(spacing: rowSpacing) {
@@ -773,7 +854,8 @@ struct ContentView: View {
                         label: "×\(multipliers[0])",
                         onFull: {
                             performCarry(playerIndex: 0, fromRod: 0)
-                        }
+                        },
+                        style: abacusStyle
                     )
                     .frame(height: rowHeight)
 
@@ -785,7 +867,8 @@ struct ContentView: View {
                         label: "×\(multipliers[1])",
                         onFull: {
                             performCarry(playerIndex: 0, fromRod: 1)
-                        }
+                        },
+                        style: abacusStyle
                     )
                     .frame(height: rowHeight)
 
@@ -797,7 +880,8 @@ struct ContentView: View {
                         label: "×\(multipliers[2])",
                         onFull: {
                             // верхний разряд для команды не переносим
-                        }
+                        },
+                        style: abacusStyle
                     )
                     .frame(height: rowHeight)
 
@@ -812,7 +896,8 @@ struct ContentView: View {
                             }
                         ),
                         label: NSLocalizedString("row_label_win_team_1", comment: ""),
-                        onFull: {}
+                        onFull: {},
+                        style: abacusStyle
                     )
                     .frame(height: rowHeight)
 
@@ -826,7 +911,8 @@ struct ContentView: View {
                             }
                         ),
                         label: NSLocalizedString("row_label_win_team_2", comment: ""),
-                        onFull: {}
+                        onFull: {},
+                        style: abacusStyle
                     )
                     .frame(height: rowHeight)
 
@@ -839,7 +925,8 @@ struct ContentView: View {
                         label: "×\(multipliers[2])",
                         onFull: {
                             // верхний разряд для команды не переносим
-                        }
+                        },
+                        style: abacusStyle
                     )
                     .frame(height: rowHeight)
 
@@ -851,7 +938,8 @@ struct ContentView: View {
                         label: "×\(multipliers[1])",
                         onFull: {
                             performCarry(playerIndex: 1, fromRod: 1)
-                        }
+                        },
+                        style: abacusStyle
                     )
                     .frame(height: rowHeight)
 
@@ -863,7 +951,8 @@ struct ContentView: View {
                         label: "×\(multipliers[0])",
                         onFull: {
                             performCarry(playerIndex: 1, fromRod: 0)
-                        }
+                        },
+                        style: abacusStyle
                     )
                     .frame(height: rowHeight)
                 }
@@ -922,11 +1011,7 @@ struct ContentView: View {
 
         players[selectedPlayerIndex].activePerRod = Array(repeating: 0, count: rodsPerPlayer)
 
-        if matchMode == .pairs2,
-           scoreDisplayMode == .sharedBoard,
-           teamWins.indices.contains(selectedPlayerIndex) {
-            teamWins[selectedPlayerIndex] = 0
-        }
+        // НЕ обнуляем teamWins здесь - победы должны накапливаться
         Haptics.impact(.medium)
     }
 
@@ -934,13 +1019,14 @@ struct ContentView: View {
         for index in players.indices {
             players[index].activePerRod = Array(repeating: 0, count: rodsPerPlayer)
         }
-        if matchMode == .pairs2,
-           scoreDisplayMode == .sharedBoard {
-            for index in teamWins.indices {
-                teamWins[index] = 0
-            }
-        }
+        // НЕ обнуляем teamWins здесь - победы должны накапливаться
         Haptics.impact(.heavy)
+    }
+    
+    private func resetTeamWins() {
+        if matchMode == .pairs2 {
+            teamWins = Array(repeating: 0, count: 2)
+        }
     }
 
     private func triggerResetAllByShake() {
@@ -957,9 +1043,19 @@ struct ContentView: View {
             teamWins[winner] += 1
         }
         
-        // Сохраняем текущую игру в историю с информацией о победителе
-        saveCurrentGameToHistory(winner: winnerIndex)
+        // Сохраняем текущую игру в сессию
+        if matchMode == .pairs2 {
+            let currentScores = players.map { score(for: $0) }
+            let session = GameSession(
+                id: UUID(),
+                date: Date(),
+                scores: currentScores,
+                winner: winnerIndex
+            )
+            currentGameSessions.append(session)
+        }
         
+        // НЕ сохраняем в историю при встряхивании - только обнуляем счет
         withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
             resetAllPlayers()
         }
@@ -969,12 +1065,22 @@ struct ContentView: View {
         guard let mode = matchMode, !players.isEmpty else { return nil }
         let scores = players.map { score(for: $0) }
         let names: [String]?
+        let totalWins: [Int]?
+        let sessions: [GameSession]?
+        
         if mode == .pairs2 {
             ensureCustomNamesCapacity()
             names = Array(customNames.prefix(players.count))
+            // Сохраняем общее количество побед для режима пар
+            totalWins = teamWins.isEmpty ? nil : Array(teamWins.prefix(players.count))
+            // Сохраняем все игры из текущей сессии
+            sessions = currentGameSessions.isEmpty ? nil : currentGameSessions
         } else {
             names = nil
+            totalWins = nil
+            sessions = nil
         }
+        
         return GameHistoryEntry(
             id: UUID(),
             date: Date(),
@@ -983,7 +1089,9 @@ struct ContentView: View {
             scoreDisplayMode: scoreDisplayMode,
             scores: scores,
             names: names,
-            winner: winner
+            winner: winner,
+            totalWins: totalWins,
+            gameSessions: sessions
         )
     }
 
@@ -994,6 +1102,9 @@ struct ContentView: View {
         if let data = try? JSONEncoder().encode(all) {
             gameHistoryData = data
         }
+        
+        // Очищаем текущую сессию после сохранения в историю
+        currentGameSessions.removeAll()
     }
 
     private func deleteHistoryEntry(_ entry: GameHistoryEntry) {
@@ -1233,21 +1344,94 @@ struct AbacusRodView: View {
     @Binding var activeCount: Int      // сколько бусинок переведено
     let label: String                  // подпись ×1 / ×5 / ×10
     let onFull: () -> Void             // вызывается, когда палка полностью заполнена
+    let style: AbacusStyle             // стиль счетов
 
     private static let beadsCount: Int = 10
 
     @State private var draggingIndex: Int? = nil
     @State private var dragTranslation: CGFloat = 0
 
-    private let inactiveBeadColor = Color(red: 0.86, green: 0.78, blue: 0.64)
-    private let activeBeadGradient = LinearGradient(
-        colors: [
-            Color(red: 0.96, green: 0.80, blue: 0.40),
-            Color(red: 0.98, green: 0.64, blue: 0.33)
-        ],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
+    private var inactiveBeadColors: LinearGradient {
+        switch style {
+        case .classic:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.86, green: 0.78, blue: 0.64),
+                    Color(red: 0.74, green: 0.64, blue: 0.50)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .stone:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.55, green: 0.52, blue: 0.48),
+                    Color(red: 0.42, green: 0.39, blue: 0.35)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .neon:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.15, green: 0.10, blue: 0.20),
+                    Color(red: 0.08, green: 0.05, blue: 0.12)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .wooden:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.66, green: 0.48, blue: 0.28),
+                    Color(red: 0.48, green: 0.34, blue: 0.19)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+    }
+    
+    private var activeBeadColors: LinearGradient {
+        switch style {
+        case .classic:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.96, green: 0.80, blue: 0.40),
+                    Color(red: 0.98, green: 0.64, blue: 0.33)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .stone:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.75, green: 0.72, blue: 0.68),
+                    Color(red: 0.62, green: 0.59, blue: 0.55)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .neon:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.28, green: 0.85, blue: 0.48),
+                    Color(red: 0.15, green: 0.65, blue: 0.35)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .wooden:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.86, green: 0.66, blue: 0.36),
+                    Color(red: 0.78, green: 0.58, blue: 0.28)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+    }
 
     var body: some View {
         GeometryReader { geo in
@@ -1358,29 +1542,22 @@ struct AbacusRodView: View {
     @ViewBuilder
     private func beadBody(isCounted: Bool, beadDiameter: CGFloat) -> some View {
         let base = RoundedRectangle(cornerRadius: beadDiameter / 2.2, style: .continuous)
+        let glowColor = style == .neon ? Color(red: 0.28, green: 0.85, blue: 0.48) : Color.white
 
         if isCounted {
             base
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color(red: 0.98, green: 0.86, blue: 0.55),
-                            Color(red: 0.92, green: 0.70, blue: 0.38)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+                .fill(activeBeadColors)
                 .frame(width: beadDiameter * 1.15, height: beadDiameter * 0.9)
                 .overlay(
                     base
                         .inset(by: 1)
-                        .strokeBorder(Color.white.opacity(0.45), lineWidth: 1)
+                        .strokeBorder(glowColor.opacity(style == .neon ? 0.8 : 0.45), lineWidth: style == .neon ? 2 : 1)
                 )
-                .shadow(color: Color.black.opacity(0.55), radius: 5, x: 0, y: 3)
+                .shadow(color: style == .neon ? glowColor.opacity(0.6) : Color.black.opacity(0.55), 
+                       radius: style == .neon ? 8 : 5, x: 0, y: 3)
                 .overlay(
                     Capsule()
-                        .fill(Color.white.opacity(0.28))
+                        .fill(glowColor.opacity(style == .neon ? 0.4 : 0.28))
                         .frame(width: beadDiameter * 0.5, height: beadDiameter * 0.35)
                         .offset(x: -beadDiameter * 0.15, y: -beadDiameter * 0.15),
                     alignment: .topLeading
@@ -1388,23 +1565,15 @@ struct AbacusRodView: View {
                 .scaleEffect(1.04)
         } else {
             base
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color(red: 0.86, green: 0.78, blue: 0.64),
-                            Color(red: 0.74, green: 0.64, blue: 0.50)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+                .fill(inactiveBeadColors)
                 .frame(width: beadDiameter * 1.08, height: beadDiameter * 0.85)
                 .overlay(
                     base
                         .inset(by: 1)
-                        .strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
+                        .strokeBorder(glowColor.opacity(style == .neon ? 0.3 : 0.18), lineWidth: 1)
                 )
-                .shadow(color: Color.black.opacity(0.35), radius: 3, x: 0, y: 2)
+                .shadow(color: style == .neon ? glowColor.opacity(0.2) : Color.black.opacity(0.35), 
+                       radius: style == .neon ? 4 : 3, x: 0, y: 2)
         }
     }
 
@@ -1416,64 +1585,325 @@ struct SettingsView: View {
     @AppStorage("appLanguage") private var appLanguage: String = "ru"
     @Binding var matchModeRaw: String
     @Binding var scoreDisplayModeRaw: String
+    @Binding var abacusStyleRaw: String
 
     private struct Language: Identifiable {
         let id: String
         let titleKey: LocalizedStringKey
+        let flag: String
     }
 
     private let languages: [Language] = [
-        Language(id: "ru", titleKey: LocalizedStringKey("language_ru")),
-        Language(id: "en", titleKey: LocalizedStringKey("language_en")),
-        Language(id: "az", titleKey: LocalizedStringKey("language_az"))
+        Language(id: "ru", titleKey: LocalizedStringKey("language_ru"), flag: "🇷🇺"),
+        Language(id: "en", titleKey: LocalizedStringKey("language_en"), flag: "🇺🇸"),
+        Language(id: "az", titleKey: LocalizedStringKey("language_az"), flag: "🇦🇿")
     ]
 
     private var currentMatchMode: MatchMode? {
         MatchMode(rawValue: matchModeRaw)
     }
+    
+    private var backgroundGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 0.02, green: 0.04, blue: 0.08),
+                Color(red: 0.08, green: 0.06, blue: 0.16),
+                Color(red: 0.04, green: 0.06, blue: 0.12)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    private var cardBackground: some View {
+        RoundedRectangle(cornerRadius: 20, style: .continuous)
+            .fill(Color.white.opacity(0.08))
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.15), Color.white.opacity(0.05)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            )
+    }
+
+    private func selectionIconBackground(isSelected: Bool) -> some View {
+        let selected = LinearGradient(
+            colors: [Color(red: 0.28, green: 0.85, blue: 0.48), Color(red: 0.15, green: 0.65, blue: 0.35)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        let unselected = LinearGradient(
+            colors: [Color.white.opacity(0.1), Color.white.opacity(0.05)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        return RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(isSelected ? selected : unselected)
+            .frame(width: 50, height: 50)
+    }
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    Picker(selection: $matchModeRaw) {
-                        Text("match_mode_pairs").tag(MatchMode.pairs2.rawValue)
-                        Text("match_mode_freeforall").tag(MatchMode.freeForAll4.rawValue)
-                    } label: {
-                        Text("match_mode_title")
-                    }
-                    .pickerStyle(.segmented)
-                }
+            ZStack {
+                // Улучшенный градиентный фон
+                backgroundGradient
+                    .ignoresSafeArea()
 
-                if currentMatchMode == .pairs2 {
-                    Section {
-                        Picker(selection: $scoreDisplayModeRaw) {
-                            Text("score_display_per_team").tag(ScoreDisplayMode.perTeam.rawValue)
-                            Text("score_display_shared").tag(ScoreDisplayMode.sharedBoard.rawValue)
-                        } label: {
-                            Text("score_display_mode_title")
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Заголовок
+                        VStack(spacing: 8) {
+                            Image(systemName: "gearshape.fill")
+                                .font(.system(size: 40, weight: .light))
+                                .foregroundStyle(Color(red: 0.28, green: 0.85, blue: 0.48))
+                            Text("settings_title")
+                                .font(.system(.title2, design: .rounded, weight: .bold))
+                                .foregroundStyle(.white)
+                            Text("settings_subtitle")
+                                .font(.system(.subheadline, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.7))
+                                .multilineTextAlignment(.center)
                         }
-                        .pickerStyle(.segmented)
-                    }
-                }
+                        .padding(.top, 20)
 
-                Section {
-                    Picker(selection: $appLanguage) {
-                        ForEach(languages) { lang in
-                            Text(lang.titleKey).tag(lang.id)
+                        // Режим матча
+                        VStack(spacing: 16) {
+                            HStack {
+                                Image(systemName: "person.2.fill")
+                                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                                    .foregroundStyle(Color(red: 0.28, green: 0.85, blue: 0.48))
+                                Text("match_mode_title")
+                                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                Spacer()
+                            }
+                            
+                            VStack(spacing: 12) {
+                                ForEach([MatchMode.pairs2, MatchMode.freeForAll4], id: \.self) { mode in
+                                    Button {
+                                        matchModeRaw = mode.rawValue
+                                    } label: {
+                                        HStack(spacing: 12) {
+                                            ZStack {
+                                                selectionIconBackground(isSelected: matchModeRaw == mode.rawValue)
+                                                Image(systemName: mode == .pairs2 ? "person.2" : "person.3")
+                                                    .font(.system(size: 20, weight: .medium))
+                                                    .foregroundStyle(.white)
+                                            }
+                                            
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text(mode == .pairs2 ? "match_mode_pairs" : "match_mode_freeforall")
+                                                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                                                    .foregroundStyle(.white)
+                                                Text(mode == .pairs2 ? "match_mode_pairs_subtitle" : "match_mode_freeforall_subtitle")
+                                                    .font(.system(.caption, design: .rounded))
+                                                    .foregroundStyle(.white.opacity(0.6))
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            if matchModeRaw == mode.rawValue {
+                                                Image(systemName: "checkmark.circle.fill")
+                                                    .font(.system(size: 20, weight: .semibold))
+                                                    .foregroundStyle(Color(red: 0.28, green: 0.85, blue: 0.48))
+                                            }
+                                        }
+                                        .padding(16)
+                                        .background(cardBackground)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
                         }
-                    } label: {
-                        Text("language_title")
+                        .padding(20)
+
+                        // Режим отображения счета
+                        if currentMatchMode == .pairs2 {
+                            VStack(spacing: 16) {
+                                HStack {
+                                    Image(systemName: "chart.bar.fill")
+                                        .font(.system(.subheadline, design: .rounded, weight: .medium))
+                                        .foregroundStyle(Color(red: 0.28, green: 0.85, blue: 0.48))
+                                    Text("score_display_mode_title")
+                                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                                        .foregroundStyle(.white)
+                                    Spacer()
+                                }
+                                
+                                VStack(spacing: 12) {
+                                    ForEach([ScoreDisplayMode.perTeam, ScoreDisplayMode.sharedBoard], id: \.self) { mode in
+                                        Button {
+                                            scoreDisplayModeRaw = mode.rawValue
+                                        } label: {
+                                            HStack(spacing: 12) {
+                                                ZStack {
+                                                    selectionIconBackground(isSelected: scoreDisplayModeRaw == mode.rawValue)
+                                                    Image(systemName: mode == .perTeam ? "square.split.2x1" : "square.grid.2x2")
+                                                        .font(.system(size: 20, weight: .medium))
+                                                        .foregroundStyle(.white)
+                                                }
+                                                
+                                                VStack(alignment: .leading, spacing: 2) {
+                                                    Text(mode == .perTeam ? "score_display_per_team" : "score_display_shared")
+                                                        .font(.system(.subheadline, design: .rounded, weight: .medium))
+                                                        .foregroundStyle(.white)
+                                                    Text(mode == .perTeam ? "score_display_per_team_subtitle" : "score_display_shared_subtitle")
+                                                        .font(.system(.caption, design: .rounded))
+                                                        .foregroundStyle(.white.opacity(0.6))
+                                                }
+                                                
+                                                Spacer()
+                                                
+                                                if scoreDisplayModeRaw == mode.rawValue {
+                                                    Image(systemName: "checkmark.circle.fill")
+                                                        .font(.system(size: 20, weight: .semibold))
+                                                        .foregroundStyle(Color(red: 0.28, green: 0.85, blue: 0.48))
+                                                }
+                                            }
+                                            .padding(16)
+                                            .background(cardBackground)
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                            }
+                            .padding(20)
+                        }
+
+                        // Стиль счетов
+                        VStack(spacing: 16) {
+                            HStack {
+                                Image(systemName: "paintbrush.fill")
+                                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                                    .foregroundStyle(Color(red: 0.28, green: 0.85, blue: 0.48))
+                                Text("abacus_style_title")
+                                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                Spacer()
+                            }
+                            
+                            VStack(spacing: 12) {
+                                ForEach(AbacusStyle.allCases, id: \.self) { style in
+                                    Button {
+                                        abacusStyleRaw = style.rawValue
+                                    } label: {
+                                        HStack(spacing: 12) {
+                                            ZStack {
+                                                selectionIconBackground(isSelected: abacusStyleRaw == style.rawValue)
+                                                
+                                                // Иконки для разных стилей
+                                                Group {
+                                                    switch style {
+                                                    case .classic:
+                                                        Image(systemName: "circle.grid.3x3")
+                                                            .font(.system(size: 20, weight: .medium))
+                                                            .foregroundStyle(.white)
+                                                    case .stone:
+                                                        Image(systemName: "mount.2.fill")
+                                                            .font(.system(size: 20, weight: .medium))
+                                                            .foregroundStyle(.white)
+                                                    case .neon:
+                                                        Image(systemName: "lightbulb.fill")
+                                                            .font(.system(size: 20, weight: .medium))
+                                                            .foregroundStyle(.white)
+                                                    case .wooden:
+                                                        Image(systemName: "tree.fill")
+                                                            .font(.system(size: 20, weight: .medium))
+                                                            .foregroundStyle(.white)
+                                                    }
+                                                }
+                                            }
+                                            
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text(style.titleKey)
+                                                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                                                    .foregroundStyle(.white)
+                                                Text(style.subtitleKey)
+                                                    .font(.system(.caption, design: .rounded))
+                                                    .foregroundStyle(.white.opacity(0.6))
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            if abacusStyleRaw == style.rawValue {
+                                                Image(systemName: "checkmark.circle.fill")
+                                                    .font(.system(size: 20, weight: .semibold))
+                                                    .foregroundStyle(Color(red: 0.28, green: 0.85, blue: 0.48))
+                                            }
+                                        }
+                                        .padding(16)
+                                        .background(cardBackground)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+                        .padding(20)
+
+                        // Язык
+                        VStack(spacing: 16) {
+                            HStack {
+                                Image(systemName: "globe")
+                                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                                    .foregroundStyle(Color(red: 0.28, green: 0.85, blue: 0.48))
+                                Text("language_title")
+                                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                Spacer()
+                            }
+                            
+                            VStack(spacing: 12) {
+                                ForEach(languages) { lang in
+                                    Button {
+                                        appLanguage = lang.id
+                                    } label: {
+                                        HStack(spacing: 12) {
+                                            Text(lang.flag)
+                                                .font(.system(size: 24))
+                                            
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text(lang.titleKey)
+                                                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                                                    .foregroundStyle(.white)
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            if appLanguage == lang.id {
+                                                Image(systemName: "checkmark.circle.fill")
+                                                    .font(.system(size: 20, weight: .semibold))
+                                                    .foregroundStyle(Color(red: 0.28, green: 0.85, blue: 0.48))
+                                            }
+                                        }
+                                        .padding(16)
+                                        .background(cardBackground)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+                        .padding(20)
+                        
+                        Spacer(minLength: 40)
                     }
+                    .padding(.horizontal, 20)
                 }
             }
             .navigationTitle(Text("settings_title"))
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button {
                         dismiss()
                     } label: {
                         Text("done")
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(Color(red: 0.28, green: 0.85, blue: 0.48))
                     }
                 }
             }
@@ -1565,42 +1995,104 @@ private struct AbacusFrameBackground: View {
     let rowSpacing: CGFloat
     let innerPaddingV: CGFloat
     let innerPaddingH: CGFloat
+    let style: AbacusStyle
 
-    private var woodGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                Color(red: 0.94, green: 0.86, blue: 0.68),
-                Color(red: 0.78, green: 0.63, blue: 0.40)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+    private var mainGradient: LinearGradient {
+        switch style {
+        case .classic:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.94, green: 0.86, blue: 0.68),
+                    Color(red: 0.78, green: 0.63, blue: 0.40)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .stone:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.45, green: 0.42, blue: 0.38),
+                    Color(red: 0.32, green: 0.30, blue: 0.27)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .neon:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.10, green: 0.05, blue: 0.15),
+                    Color(red: 0.05, green: 0.02, blue: 0.08)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .wooden:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.72, green: 0.54, blue: 0.32),
+                    Color(red: 0.52, green: 0.38, blue: 0.22)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
     }
-
-    private var innerWoodGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                Color(red: 0.90, green: 0.80, blue: 0.64),
-                Color(red: 0.70, green: 0.57, blue: 0.38)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+    
+    private var innerGradient: LinearGradient {
+        switch style {
+        case .classic:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.90, green: 0.80, blue: 0.64),
+                    Color(red: 0.70, green: 0.57, blue: 0.38)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .stone:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.38, green: 0.35, blue: 0.31),
+                    Color(red: 0.25, green: 0.23, blue: 0.20)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .neon:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.08, green: 0.04, blue: 0.12),
+                    Color(red: 0.04, green: 0.02, blue: 0.06)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .wooden:
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.68, green: 0.50, blue: 0.30),
+                    Color(red: 0.48, green: 0.34, blue: 0.19)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
     }
 
     var body: some View {
         GeometryReader { geo in
             let size = geo.size
-            let corner: CGFloat = 12
+            let corner: CGFloat = style == .neon ? 16 : 12
 
             ZStack {
                 RoundedRectangle(cornerRadius: corner, style: .continuous)
-                    .fill(woodGradient)
-                    .shadow(color: Color.black.opacity(0.45), radius: 12, x: 0, y: 8)
+                    .fill(mainGradient)
+                    .shadow(color: style == .neon ? Color(red: 0.28, green: 0.85, blue: 0.48).opacity(0.3) : Color.black.opacity(0.45), 
+                           radius: style == .neon ? 20 : 12, x: 0, y: 8)
 
                 // Внутренняя панель
                 RoundedRectangle(cornerRadius: max(8, corner - 2), style: .continuous)
-                    .fill(innerWoodGradient.opacity(0.9))
+                    .fill(innerGradient.opacity(0.9))
                     .padding(9)
 
                 // Боковые стойки (как у настоящих счет)
@@ -1630,7 +2122,7 @@ private struct AbacusFrameBackground: View {
 
                     // Тёмная канавка по центру (имитация "прута/отверстий")
                     Capsule()
-                        .fill(Color.black.opacity(0.20))
+                        .fill(style == .neon ? Color(red: 0.28, green: 0.85, blue: 0.48).opacity(0.3) : Color.black.opacity(0.20))
                         .frame(width: size.width - 36, height: 10)
                         .position(x: size.width / 2, y: y)
 
@@ -1642,65 +2134,84 @@ private struct AbacusFrameBackground: View {
                 }
 
                 RoundedRectangle(cornerRadius: corner - 2, style: .continuous)
-                    .strokeBorder(Color.black.opacity(0.22), lineWidth: 1.3)
+                    .strokeBorder(style == .neon ? 
+                        Color(red: 0.28, green: 0.85, blue: 0.48).opacity(0.6) :
+                        Color.black.opacity(0.22), lineWidth: style == .neon ? 2 : 1.3)
             }
         }
     }
 
     private var sideRail: some View {
-        RoundedRectangle(cornerRadius: 8, style: .continuous)
+        let railColors: [Color]
+        switch style {
+        case .classic:
+            railColors = [Color(red: 0.67, green: 0.50, blue: 0.30), Color(red: 0.48, green: 0.34, blue: 0.19)]
+        case .stone:
+            railColors = [Color(red: 0.35, green: 0.32, blue: 0.28), Color(red: 0.22, green: 0.20, blue: 0.17)]
+        case .neon:
+            railColors = [Color(red: 0.28, green: 0.85, blue: 0.48), Color(red: 0.15, green: 0.65, blue: 0.35)]
+        case .wooden:
+            railColors = [Color(red: 0.52, green: 0.38, blue: 0.22), Color(red: 0.38, green: 0.27, blue: 0.15)]
+        }
+        
+        return RoundedRectangle(cornerRadius: 8, style: .continuous)
             .fill(
                 LinearGradient(
-                    colors: [
-                        Color(red: 0.67, green: 0.50, blue: 0.30),
-                        Color(red: 0.48, green: 0.34, blue: 0.19)
-                    ],
+                    colors: railColors,
                     startPoint: .top,
                     endPoint: .bottom
                 )
             )
             .frame(width: 24)
-            .shadow(color: Color.black.opacity(0.22), radius: 4, x: 0, y: 2)
+            .shadow(color: style == .neon ? Color(red: 0.28, green: 0.85, blue: 0.48).opacity(0.3) : Color.black.opacity(0.22), radius: 4, x: 0, y: 2)
             .overlay(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.10), lineWidth: 1)
+                    .strokeBorder(style == .neon ? Color(red: 0.28, green: 0.85, blue: 0.48).opacity(0.4) : Color.white.opacity(0.10), lineWidth: 1)
             )
     }
 
     private var horizontalRail: some View {
-        RoundedRectangle(cornerRadius: 8, style: .continuous)
+        let railColors: [Color]
+        switch style {
+        case .classic:
+            railColors = [Color(red: 0.67, green: 0.50, blue: 0.30), Color(red: 0.48, green: 0.34, blue: 0.19)]
+        case .stone:
+            railColors = [Color(red: 0.35, green: 0.32, blue: 0.28), Color(red: 0.22, green: 0.20, blue: 0.17)]
+        case .neon:
+            railColors = [Color(red: 0.28, green: 0.85, blue: 0.48), Color(red: 0.15, green: 0.65, blue: 0.35)]
+        case .wooden:
+            railColors = [Color(red: 0.52, green: 0.38, blue: 0.22), Color(red: 0.38, green: 0.27, blue: 0.15)]
+        }
+        
+        return RoundedRectangle(cornerRadius: 8, style: .continuous)
             .fill(
                 LinearGradient(
-                    colors: [
-                        Color(red: 0.67, green: 0.50, blue: 0.30),
-                        Color(red: 0.48, green: 0.34, blue: 0.19)
-                    ],
+                    colors: railColors,
                     startPoint: .leading,
                     endPoint: .trailing
                 )
             )
             .frame(height: 24)
-            .shadow(color: Color.black.opacity(0.18), radius: 3, x: 0, y: 2)
+            .shadow(color: style == .neon ? Color(red: 0.28, green: 0.85, blue: 0.48).opacity(0.3) : Color.black.opacity(0.18), radius: 3, x: 0, y: 2)
             .overlay(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.10), lineWidth: 1)
+                    .strokeBorder(style == .neon ? Color(red: 0.28, green: 0.85, blue: 0.48).opacity(0.4) : Color.white.opacity(0.10), lineWidth: 1)
             )
     }
 
     private var hole: some View {
         ZStack {
             Circle()
-                .fill(Color.black.opacity(0.28))
+                .fill(style == .neon ? Color(red: 0.28, green: 0.85, blue: 0.48).opacity(0.2) : Color.black.opacity(0.28))
                 .frame(width: 10, height: 10)
             Circle()
-                .strokeBorder(Color.white.opacity(0.10), lineWidth: 1)
-                .frame(width: 10, height: 10)
+                .strokeBorder(style == .neon ? Color(red: 0.28, green: 0.85, blue: 0.48).opacity(0.4) : Color.white.opacity(0.10), lineWidth: 1)
             Circle()
-                .fill(Color.white.opacity(0.10))
+                .fill(style == .neon ? Color(red: 0.28, green: 0.85, blue: 0.48).opacity(0.3) : Color.white.opacity(0.10))
                 .frame(width: 3.5, height: 3.5)
                 .offset(x: -1.5, y: -1.5)
         }
-        .shadow(color: Color.black.opacity(0.25), radius: 2, x: 0, y: 1)
+        .shadow(color: style == .neon ? Color(red: 0.28, green: 0.85, blue: 0.48).opacity(0.4) : Color.black.opacity(0.25), radius: 2, x: 0, y: 1)
     }
 }
 
