@@ -141,15 +141,9 @@ We welcome contributions to the project! To make changes:
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-## 📞 Contact
-
-If you have questions or suggestions, contact us:
-
-- Email: your.email@example.com
-- GitHub: [@yourusername](https://github.com/yourusername)
-
 ---
 
 **Made with ❤️ for board game enthusiasts**
 
-![App Icon](https://via.placeholder.com/100x100/28D554/FFFFFF?text=🎯)
+![App Icon](Compositor/Assets.xcassets/AppIcon.appiconset/Gemini_Generated_Image_qjr5a0qjr5a0qjr5%20(1).png)
+
